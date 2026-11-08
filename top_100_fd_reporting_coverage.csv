@@ -1,0 +1,101 @@
+rank,FDID,department_name,first_reported_month,last_reported_month,reported_months,total_calls,span_months,unreported_months,reported_percentage
+1,15301,Prince William County Department of Fire & Rescue,2020-01-01,2025-12-01,72,264042,72,0,100
+2,71000,Norfolk Fire-Rescue,2020-01-01,2025-12-01,72,209927,72,0,100
+3,74000,"Portsmouth Fire, Rescue and Emergency Services",2020-01-01,2025-12-01,72,115952,72,0,100
+4,17900,Stafford County Fire and Rescue Department,2020-01-01,2025-12-01,72,101234,72,0,100
+5,68300,City of Manassas Fire and Rescue,2020-01-01,2025-12-01,72,37511,72,0,100
+6,14309,Ringgold Volunteer Fire & Rescue,2020-01-01,2025-12-01,72,7791,72,0,100
+7,03115,Lyn-Dan Heights Volunteer Fire Department,2020-01-01,2025-12-01,72,2635,72,0,100
+8,01101,Appomattox Volunteer Fire Department,2020-01-01,2025-12-01,72,2228,72,0,100
+9,19516,Coeburn Fire Department,2020-01-01,2025-12-01,72,2090,72,0,100
+10,00109,Onancock Volunteer Fire Department,2020-01-01,2025-12-01,72,1984,72,0,100
+11,72000,Norton Fire Department,2020-01-01,2025-12-01,72,1875,72,0,100
+12,14106,Stuart Volunteer Fire Department,2020-01-01,2025-12-01,72,1809,72,0,100
+13,17121,Mt. Jackson Rescue and Fire Department (Shenandoah County Fire & Rescue),2020-01-01,2025-12-01,72,1676,72,0,100
+14,00104,"Atlantic Volunteer Fire and Rescue Company, Inc.",2020-01-01,2025-12-01,72,1555,72,0,100
+15,03117,"Evington Volunteer Fire Department, Inc.",2020-01-01,2025-12-01,72,1512,72,0,100
+16,00506,Sharon Volunteer Fire Department,2020-01-01,2025-12-01,72,1315,72,0,100
+17,19704,Rural Retreat Volunteer Fire Department,2020-01-01,2025-12-01,72,1274,72,0,100
+18,03114,Gladys Volunteer Fire Department,2020-01-01,2025-12-01,72,1255,72,0,100
+19,00101,New Church Volunteer Fire & Rescue Company,2020-01-01,2025-12-01,72,1240,72,0,100
+20,00110,"Melfa Volunteer Fire and Rescue Company, Inc.",2020-01-01,2025-12-01,72,1131,72,0,100
+21,14704,"Prospect Volunteer Fire Department, Inc.",2020-01-01,2025-12-01,72,985,72,0,100
+22,11101,Kenbridge Fire Department,2020-01-01,2025-12-01,72,866,72,0,100
+23,03111,Brookneal Volunteer Fire Department,2020-01-01,2025-12-01,72,714,72,0,100
+24,19701,"Barren Springs Volunteer Fire Department, Inc.",2020-01-01,2025-12-01,72,579,72,0,100
+25,02101,"Bland County Volunteer Fire Department, Inc.",2020-01-01,2025-12-01,72,485,72,0,100
+26,04100,Chesterfield Fire & Emergency Medical Services,2020-01-01,2025-11-01,71,276224,71,0,100
+27,09900,"King George County Department of Fire, Rescue, & Emergency Servcies",2020-01-01,2025-11-01,71,23655,71,0,100
+28,00108,Tasley Volunteer Fire Company,2020-01-01,2025-11-01,71,1768,71,0,100
+29,07903,"Dyke Volunteer Fire Co., Inc.",2020-01-01,2025-11-01,71,823,71,0,100
+30,00112,Painter Volunteer Fire Company,2020-01-01,2025-10-01,70,1406,70,0,100
+31,14108,"Woolwine Volunteer Fire Department, Inc.",2020-01-01,2025-10-01,70,714,70,0,100
+32,17304,Marion Fire/EMS,2020-01-01,2025-09-01,69,14185,69,0,100
+33,64000,Galax Volunteer Fire Department,2020-01-01,2025-09-01,69,2969,69,0,100
+34,19105,Meadowview Volunteer Fire Department,2020-01-01,2025-09-01,69,1857,69,0,100
+35,19550,Big Stone Gap Volunteer Fire Department,2020-01-01,2025-08-01,68,1188,68,0,100
+36,56000,Clifton Forge Fire Department,2020-01-01,2025-06-01,66,6285,66,0,100
+37,12503,Faber Volunteer Fire Department,2020-01-01,2025-03-01,63,906,63,0,100
+38,07180,Rich Creek Volunteer Fire Department,2020-01-01,2024-06-01,54,198,54,0,100
+39,02902,Dillwyn Volunteer Fire Department (part of Buckingham Volunteer Fire Department),2020-01-01,2024-02-01,50,735,50,0,100
+40,10900,Louisa County Department of Fire and Emergency Medical Services,2022-01-01,2025-12-01,48,25700,48,0,100
+41,92008,Lynchburg Regional Airport Crash Fire Rescue,2020-02-01,2023-12-01,47,323,47,0,100
+42,06700,Franklin County Public Safety,2022-09-01,2025-06-01,34,12351,34,0,100
+43,02503,Dolphin Volunteer Fire Department,2024-01-01,2025-12-01,24,216,24,0,100
+44,18102,Dendron Volunteer Fire Department,2020-01-01,2021-04-01,16,55,16,0,100
+45,15505,Newbern Volunteer Fire Department,2020-01-01,2021-03-01,15,214,15,0,100
+46,19112,Brumley Gap Volunteer Fire Department,2025-02-01,2025-12-01,11,124,11,0,100
+47,02701,Grundy Fire Department,2020-01-01,2020-10-01,10,91,10,0,100
+48,18502,Bluefield Virginia Fire Department,2021-01-01,2021-08-01,8,275,8,0,100
+49,15507,Snowville Volunteer Fire Department,2020-01-01,2020-08-01,8,54,8,0,100
+50,14702,"Hampden-Sydney Volunteer Fire Department, Inc.",2020-02-01,2020-08-01,7,180,7,0,100
+51,18706,Linden Volunteer Fire Department (Warren County Fire & Rescue),2020-01-01,2020-06-01,6,12,6,0,100
+52,09102,"McDowell Fire Company, Inc.",2024-01-01,2024-05-01,5,18,5,0,100
+53,19703,Max Meadows Volunteer Fire Department,2025-09-01,2025-12-01,4,27,4,0,100
+54,19530,Appalachia Volunteer Fire Department,2025-06-01,2025-09-01,4,26,4,0,100
+55,18703,South Warren Volunteer Fire Department (Warren County Fire & Rescue),2020-01-01,2020-04-01,4,18,4,0,100
+56,13114,Cheriton Volunteer Fire Company,2020-01-01,2020-03-01,3,16,3,0,100
+57,12504,Gladstone Volunteer Fire Department,2025-06-01,2025-08-01,3,3,3,0,100
+58,10501,Jonesville Volunteer Fire Department,2020-01-01,2020-02-01,2,18,2,0,100
+59,15702,Sperryville Volunteer Fire Department,2020-01-01,2020-02-01,2,14,2,0,100
+60,03110,Altavista Fire Department,2025-07-01,2025-08-01,2,5,2,0,100
+61,13303,Fairfields Volunteer Fire Department,2020-09-01,2020-10-01,2,2,2,0,100
+62,15500,Pulaski County Fire Rescue,2020-01-01,2020-01-01,1,37,1,0,100
+63,12501,Nelson County Volunteer Fireman's Association/ Lovingston Volunteer Fire Department,2024-03-01,2024-03-01,1,30,1,0,100
+64,18512,Clearfork Volunteer Fire Department,2020-12-01,2020-12-01,1,2,1,0,100
+65,10505,Dryden Volunteer Fire Department,2020-01-01,2020-01-01,1,1,1,0,100
+66,17305,"Nebo Volunteer Fire Department, Inc.",2020-01-01,2020-01-01,1,1,1,0,100
+67,92006,Newport News/Williamsburg International Airport Fire Department,2025-01-01,2025-01-01,1,1,1,0,100
+68,70001,Newport News Fire Department,2020-01-01,2025-12-01,71,204514,72,1,98.61111111111111
+69,51000,Alexandria Fire Department,2020-01-01,2025-12-01,71,132248,72,1,98.61111111111111
+70,17700,Spotsylvania County Department of Fire Rescue & Emergency Management,2020-01-01,2025-12-01,71,118851,72,1,98.61111111111111
+71,17100,Shenandoah County Department of Fire-Rescue,2020-01-01,2025-12-01,71,43500,72,1,98.61111111111111
+72,13700,County of Orange Fire and EMS,2020-01-01,2025-12-01,71,32463,72,1,98.61111111111111
+73,19706,Wytheville Fire Department,2020-01-01,2025-12-01,71,17221,72,1,98.61111111111111
+74,07301,"Abingdon Volunteer Fire and Rescue, Inc.",2020-01-01,2025-12-01,71,11863,72,1,98.61111111111111
+75,14701,Farmville Volunteer Fire Department,2020-01-01,2025-12-01,71,7101,72,1,98.61111111111111
+76,14313,Brosville Volunteer Fire Department,2020-01-01,2025-12-01,71,4161,72,1,98.61111111111111
+77,62001,Hunterdale Volunteer Fire Department,2020-01-01,2025-12-01,71,1170,72,1,98.61111111111111
+78,17507,Newsoms Volunteer Fire Department,2020-01-01,2025-12-01,71,913,72,1,98.61111111111111
+79,10504,Thomas Walker Volunteer Fire Department #1,2020-01-01,2025-12-01,71,467,72,1,98.61111111111111
+80,11901,"Hartfield Volunteer Fire Department, Inc.",2020-01-01,2025-12-01,71,459,72,1,98.61111111111111
+81,84000,Winchester Fire & Rescue,2020-02-01,2025-12-01,70,35084,71,1,98.59154929577464
+82,19110,"Washington County Fire Rescue 1, Inc.",2020-01-01,2025-11-01,70,5543,71,1,98.59154929577464
+83,17115,Edinburg Volunteer Fire Company (Shenandoah County Fire & Rescue),2020-01-01,2025-11-01,70,1061,71,1,98.59154929577464
+84,11904,Upper Middlesex Volunteer Fire Department,2020-01-01,2025-10-01,69,436,70,1,98.57142857142857
+85,07130,Narrows Fire Department,2020-01-01,2024-09-01,56,613,57,1,98.24561403508773
+86,04703,Richardsville Volunteer Fire Department & Rescue Squad,2021-02-01,2025-08-01,54,279,55,1,98.18181818181819
+87,08900,Henry County Department of Public Safety,2020-01-01,2025-12-01,70,27134,72,2,97.22222222222223
+88,12700,New Kent Fire-Rescue,2020-01-01,2025-12-01,70,22370,72,2,97.22222222222223
+89,52000,Bristol Fire Department,2020-01-01,2025-12-01,70,19260,72,2,97.22222222222223
+90,03500,Carroll County Fire Rescue,2020-01-01,2025-12-01,70,15244,72,2,97.22222222222223
+91,78000,South Boston Fire & EMS,2020-01-01,2025-12-01,70,11299,72,2,97.22222222222223
+92,17113,"Conicville Volunteer Fire Department, Inc (Shenandoah County Fire & Rescue)",2020-01-01,2025-12-01,70,1516,72,2,97.22222222222223
+93,04706,"Little Fork Volunteer Fire & Rescue Company, Inc",2020-01-01,2025-12-01,70,1442,72,2,97.22222222222223
+94,03501,Cana Volunteer Fire Department,2020-01-01,2025-12-01,70,1348,72,2,97.22222222222223
+95,17114,Fort Valley Volunteer Fire Department (Shenandoah County Fire & Rescue),2020-01-01,2025-12-01,70,701,72,2,97.22222222222223
+96,14305,Tunstall Volunteer Fire and Rescue,2020-01-01,2025-12-01,70,627,72,2,97.22222222222223
+97,00111,"Wachapreague Volunteer Fire Company, Inc.",2020-01-01,2025-12-01,70,534,72,2,97.22222222222223
+98,12103,Christiansburg Fire Department,2020-02-01,2025-12-01,69,5726,71,2,97.1830985915493
+99,16903,"Gate City Volunteer Fire Department, Inc.",2020-01-01,2025-08-01,66,1068,68,2,97.05882352941177
+100,10509,Stickleyville Volunteer Fire Department Inc.,2020-01-01,2025-08-01,66,230,68,2,97.05882352941177
