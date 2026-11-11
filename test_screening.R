@@ -413,7 +413,7 @@ MANUAL_FLAG <- tibble::tibble(
 )
 
 # Set TRUE only AFTER completing manual review.
-RUN_FINAL_CLEANING <- FALSE
+RUN_FINAL_CLEANING <- TRUE
 if (RUN_FINAL_CLEANING) {
   validation_clean <- clean_nfirs_validation(
     nfirs = nfirs_373,
