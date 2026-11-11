@@ -387,26 +387,28 @@ validation_screen <- screen_nfirs_validation(
 # 4. AFTER REVIEWING PLOTS, ENTER MANUAL FDIDs AND RUN CLEANING -----------------
 # Empty vectors are placeholders: do NOT interpret them as reviewed decisions.
 # Add your FDIDs after inspecting plots and screening tables.
-THIRTY_PERCENT_FDIDS <- c()
+THIRTY_PERCENT_FDIDS <- c("902","4100","7301","8900","10700","11707","14310","14313","14701",
+                          "16544","17100","17304","17900","19110","19301","19706","51000")
 # Mark months below 30% of that department's monthly median as suspected missing.
 
-MANUAL_EXCLUDE_FDIDS <- c()
+MANUAL_EXCLUDE_FDIDS <- c("2902","7130","7180","14314","17301","66000","92008","12503")
 # Only these explicitly listed departments are excluded in final cleaning.
 
 PRESERVE_ZEROES_FDIDS <- c()
 # Keep zero-call months valid for these departments, except MANUAL_FLAG overrides.
 
-MANUAL_ZERO_FDIDS <- c()
+MANUAL_ZERO_FDIDS <- c("903","2502","14302","14308","14319","14321","16500","16501","16505","16508","16515","16517","16544",
+                       "55000","56000","67000","300","6900","7500","8908","9900","16500","16505",
+                       "16508","16515","19105","19303","51500")
 
 # Mark all zero-call months as suspected missing for these departments.
 
 # Exact department-month overrides (2024): mark ONLY the specified months.
 # These overrides take precedence over preserve_zeroes and apply to nonzero months too.
 MANUAL_FLAG <- tibble::tibble(
-  FDID = c("3501", "3501", "8307", "8906", "8906", "14311", "14318"),
+  FDID = c("10700", "10700"),
   month = as.Date(c(
-    "2024-01-01", "2024-06-01", "2024-09-01",
-    "2024-01-01", "2024-09-01", "2024-12-01", "2024-05-01"
+    "2025-05-01", "2025-11-01"
   ))
 )
 
