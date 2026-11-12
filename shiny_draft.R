@@ -8,6 +8,7 @@
 #                    "ggplot2", "plotly", "leaflet",
 #                    "readr", "lubridate"))
 
+
 library(shiny)
 library(bslib)
 library(dplyr)
@@ -60,8 +61,14 @@ if ("model_calls" %in% names(model_daily)) {
 
 nb_temporal <- readRDS("nb_temporal.rds")
 
-# Extract departments used in training
+# Original FDID levels used during model training
 model_fd_levels <- levels(nb_temporal$frame$FDID)
+
+# Match formatted dashboard FDIDs to original model IDs
+model_fd_lookup <- setNames(
+  model_fd_levels,
+  format_fdid(model_fd_levels)
+)
 
 # ============================================================
 # 2. FIRE DEPARTMENT LOOKUP
@@ -410,20 +417,32 @@ ui <- page_fluid(
 # 5. SERVER
 # ============================================================
 
+# Only include departments with valid coordinates
+map_data <- fd_lookup %>%
+  filter(
+    !is.na(latitude),
+    !is.na(longitude),
+    latitude >= 36,
+    latitude <= 40,
+    longitude >= -84,
+    longitude <= -75
+  )
+
 server <- function(input, output, session) {
   
   # ----------------------------------------------------------
   # SELECTED DEPARTMENT
   # ----------------------------------------------------------
   
+  model_daily <- model_daily %>%
+    arrange(fdid, date)
+  
+  data_by_fd <- split(model_daily, model_daily$fdid)
+  
   selected_data <- reactive({
-    
     req(input$selected_fd)
     
-    model_daily %>%
-      filter(fdid == input$selected_fd) %>%
-      arrange(date)
-    
+    data_by_fd[[input$selected_fd]]
   })
   
   selected_info <- reactive({
@@ -576,17 +595,6 @@ output$forecast_table <- renderTable({
   
   output$virginia_map <- renderLeaflet({
     
-    # Only include departments with valid coordinates
-    map_data <- fd_lookup %>%
-      filter(
-        !is.na(latitude),
-        !is.na(longitude),
-        latitude >= 36,
-        latitude <= 40,
-        longitude >= -84,
-        longitude <= -75
-      )
-    
     # Create Virginia map using OpenStreetMap
     map <- leaflet() %>%
       addTiles(
@@ -684,39 +692,25 @@ output$forecast_table <- renderTable({
         filter(
           date >= max(date, na.rm = TRUE) - days
         )
-      
     }
     
-    p <- ggplot(
-      df,
-      aes(
-        x = date,
-        y = calls_display
-      )
-    ) +
-      
-      geom_line(
+    plot_ly(
+      data = df,
+      x = ~date,
+      y = ~calls_display,
+      type = "scatter",
+      mode = "lines",
+      connectgaps = FALSE,
+      line = list(
         color = "#245B77",
-        linewidth = 0.8,
-        na.rm = FALSE
-      ) +
-      
-      labs(
-        title = "Historical Daily Call Volume",
-        x = "Date",
-        y = "Number of Calls"
-      ) +
-      
-      theme_minimal(base_size = 13) +
-      
-      theme(
-        plot.title = element_text(
-          hjust = 0.5,
-          face = "bold"
-        )
+        width = 2
       )
-    
-    ggplotly(p)
+    ) %>%
+      layout(
+        title = "Historical Daily Call Volume",
+        xaxis = list(title = "Date"),
+        yaxis = list(title = "Number of Calls")
+      )
     
   })
   
@@ -732,10 +726,13 @@ output$forecast_table <- renderTable({
     
     fd <- input$selected_fd
     
+    # Convert dashboard FDID to the model's original FDID
+    model_fd <- unname(model_fd_lookup[fd])
+    
     # Confirm the selected department is in the model
     validate(
       need(
-        fd %in% model_fd_levels,
+        length(model_fd) == 1 && !is.na(model_fd),
         "This department was not included in model training."
       )
     )
@@ -881,7 +878,8 @@ output$forecast_table <- renderTable({
         upper = upper
       )
     
-  })
+  }) %>%
+    bindCache(input$selected_fd)
   
   # ----------------------------------------------------------
   # MODEL VALIDATION PLACEHOLDER
