@@ -905,7 +905,7 @@ server <- function(input, output, session) {
   
   output$virginia_map <- renderLeaflet({
     
-    # Prepare map data and scale markers by average daily calls
+    # Prepare map data
     map_data <- fd_lookup %>%
       filter(
         !is.na(latitude),
@@ -914,22 +914,102 @@ server <- function(input, output, session) {
         latitude <= 40,
         longitude >= -84,
         longitude <= -75
-      ) %>%
+      )
+    
+    # Call-volume thresholds (average daily calls):
+    # Small = under 2, Medium = 2 to under 10, Large = 10 or more
+    volume_breaks <- c(2, 10)
+    
+    # Marker color and size for each call-volume category
+    volume_styles <- data.frame(
+      volume_category = c("Small", "Medium", "Large", "No data"),
+      marker_color = c("#8CBFD3", "#245B77", "#B85C5C", "#B8BEC6"),
+      marker_radius = c(5, 8, 12, 5)
+    )
+    
+    # Classify departments by average daily calls.
+    # Departments without call-volume data get their own category.
+    map_data <- map_data %>%
       mutate(
-        map_volume = pmax(coalesce(mean_calls, 0), 0),
-        marker_radius = 4 + 10 * sqrt(
-          map_volume / max(1, map_volume)
-        ),
-        map_label = paste0(
-          search_label,
-          " | Average daily calls: ",
+        volume_category = case_when(
+          is.na(mean_calls) ~ "No data",
+          mean_calls < volume_breaks[1] ~ "Small",
+          mean_calls < volume_breaks[2] ~ "Medium",
+          TRUE ~ "Large"
+        )
+      ) %>%
+      left_join(volume_styles, by = "volume_category") %>%
+      mutate(
+        map_popup = paste0(
+          "<div style='font-family: Inter, sans-serif; ",
+          "font-size: 13px; line-height: 1.5; color: #1F2A37;'>",
+          "<strong style='font-size: 14px; color: #1B2A41;'>",
+          htmltools::htmlEscape(department_name),
+          "</strong><br>",
+          "FDID: ", fdid, "<br>",
+          "Average daily calls: ",
           if_else(
             is.na(mean_calls),
             "N/A",
             sprintf("%.2f", mean_calls)
-          )
+          ),
+          "<br>",
+          "Call volume: ", volume_category,
+          "</div>"
         )
+      ) %>%
+      # Draw larger markers first so smaller ones stay on top
+      arrange(desc(marker_radius))
+    
+    # Build legend rows with the actual call-volume ranges
+    legend_row <- function(color, radius, label, range_text) {
+      paste0(
+        "<div style='display: flex; align-items: center; ",
+        "margin-top: 6px;'>",
+        "<span style='display: inline-flex; justify-content: center; ",
+        "align-items: center; width: 26px; margin-right: 8px;'>",
+        "<span style='display: inline-block; ",
+        "width: ", 2 * radius, "px; height: ", 2 * radius, "px; ",
+        "border-radius: 50%; background: ", color, "; ",
+        "opacity: 0.85; border: 1px solid #FFFFFF; ",
+        "box-shadow: 0 0 0 1px rgba(27, 42, 65, 0.15);'></span>",
+        "</span>",
+        "<span style='font-weight: 600; color: #1B2A41; ",
+        "width: 62px;'>", label, "</span>",
+        "<span style='color: #5B6675; ",
+        "font-variant-numeric: tabular-nums;'>", range_text, "</span>",
+        "</div>"
       )
+    }
+    
+    legend_html <- paste0(
+      "<div style='font-family: Inter, sans-serif; font-size: 12px; ",
+      "background: #FFFFFF; border: 1px solid #E3E7EC; ",
+      "border-radius: 8px; padding: 10px 12px; ",
+      "box-shadow: 0 1px 3px rgba(27, 42, 65, 0.10);'>",
+      "<div style='font-size: 12px; font-weight: 600; color: #1B2A41; ",
+      "margin-bottom: 2px;'>Average Daily Call Volume</div>",
+      legend_row(
+        "#8CBFD3", 5, "Small",
+        paste0("0 &ndash; ", volume_breaks[1])
+      ),
+      legend_row(
+        "#245B77", 8, "Medium",
+        paste0(volume_breaks[1], " &ndash; ", volume_breaks[2])
+      ),
+      legend_row(
+        "#B85C5C", 12, "Large",
+        paste0(volume_breaks[2], "+")
+      ),
+      if (any(map_data$volume_category == "No data")) {
+        legend_row("#B8BEC6", 5, "No data", "Not available")
+      } else {
+        ""
+      },
+      "<div style='margin-top: 6px; font-size: 11px; color: #5B6675;'>",
+      "Number of calls per day</div>",
+      "</div>"
+    )
     
     # Create Virginia map using OpenStreetMap
     map <- leaflet() %>%
@@ -954,13 +1034,19 @@ server <- function(input, output, session) {
           lat = ~latitude,
           layerId = ~fdid,
           label = ~search_label,
-          popup = ~search_label,
+          popup = ~map_popup,
           radius = ~marker_radius,
           color = "#FFFFFF",
-          fillColor = "#1B2A41",
-          fillOpacity = 0.8,
+          fillColor = ~marker_color,
+          fillOpacity = 0.75,
+          opacity = 0.9,
           stroke = TRUE,
           weight = 1
+        ) %>%
+        addControl(
+          html = legend_html,
+          position = "bottomright",
+          className = "fd-volume-legend"
         )
       
     }
