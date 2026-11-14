@@ -154,6 +154,72 @@ fd_summary <- model_daily %>%
 fd_lookup <- fd_lookup %>%
   left_join(fd_summary, by = "fdid")
 
+# Call-volume thresholds (average daily calls), shared by the map
+# and the Model Validation tab:
+# Small = under 2, Medium = 2 to under 10, Large = 10 or more
+volume_breaks <- c(2, 10)
+
+# ============================================================
+# 3b. MODEL VALIDATION (2025 HELD-OUT TEST SET)
+# ============================================================
+
+# Load 2025 test predictions and observed calls
+test_2025 <- read_csv(
+  "full_test_final_2025.csv",
+  col_types = cols(
+    FDID = col_character(),
+    Date = col_date(),
+    .default = col_guess()
+  )
+) %>%
+  transmute(
+    fdid = format_fdid(FDID),
+    date = Date,
+    reporting_status,
+    predicted = Predicted_calls,
+    observed = Observed_calls
+  )
+
+# Forecast accuracy metrics (error = predicted - observed)
+calc_metrics <- function(predicted, observed) {
+  err <- predicted - observed
+  data.frame(
+    days = length(err),
+    mae = mean(abs(err)),
+    rmse = sqrt(mean(err^2)),
+    bias = mean(err),
+    wape = if (sum(observed) > 0) {
+      100 * sum(abs(err)) / sum(observed)
+    } else {
+      NA_real_
+    }
+  )
+}
+
+# Format metrics as a two-column Metric / Value table
+format_metrics_long <- function(m) {
+  data.frame(
+    Metric = c(
+      "Days evaluated",
+      "Mean Absolute Error (MAE)",
+      "Root Mean Squared Error (RMSE)",
+      "Bias (predicted - observed)",
+      "Weighted Absolute % Error (WAPE)"
+    ),
+    Value = c(
+      format(m$days, big.mark = ","),
+      sprintf("%.2f calls", m$mae),
+      sprintf("%.2f calls", m$rmse),
+      sprintf("%+.2f calls", m$bias),
+      if_else(is.na(m$wape), "N/A", sprintf("%.2f%%", m$wape))
+    ),
+    check.names = FALSE
+  )
+}
+
+# Split test data by department for quick lookup
+test_by_fd <- split(test_2025, test_2025$fdid)
+
 # ============================================================
 # PLOT STYLING HELPER
 # ============================================================
@@ -709,12 +775,29 @@ ui <- page_fluid(
             h4("Forecast Accuracy"),
             
             p(
-              "This section will display validation
-               metrics calculated from the existing
-               model."
+              "Accuracy of the temporal negative binomial model on
+               held-out 2025 test data, which the model never saw
+               during training (2020-2023) or validation (2024).
+               Only days with valid reporting are evaluated;
+               suspected missing reporting periods are excluded."
             ),
             
-            tableOutput("validation_table")
+            h5("Selected Department (2025)"),
+            
+            tableOutput("validation_fd_table"),
+            
+            br(),
+            
+            plotlyOutput(
+              "validation_plot",
+              height = 380
+            ),
+            
+            br(),
+            
+            h4("Interpretation"),
+            
+            uiOutput("validation_interpretation")
           )
         )
       ),
@@ -916,9 +999,8 @@ server <- function(input, output, session) {
         longitude <= -75
       )
     
-    # Call-volume thresholds (average daily calls):
-    # Small = under 2, Medium = 2 to under 10, Large = 10 or more
-    volume_breaks <- c(2, 10)
+    # Call-volume thresholds come from the shared volume_breaks
+    # defined in the data section (Small < 2, Medium 2-10, Large 10+)
     
     # Marker color and size for each call-volume category
     volume_styles <- data.frame(
@@ -1178,21 +1260,179 @@ server <- function(input, output, session) {
   })
   
   # ----------------------------------------------------------
-  # MODEL VALIDATION PLACEHOLDER
+  # MODEL VALIDATION (2025 TEST SET)
   # ----------------------------------------------------------
   
-  output$validation_table <- renderTable({
+  # Selected department's 2025 test data
+  selected_test <- reactive({
+    req(input$selected_fd)
     
-    data.frame(
-      Metric = c(
-        "Mean Absolute Error",
-        "Root Mean Squared Error"
-      ),
-      Value = c(
-        "Not yet connected",
-        "Not yet connected"
+    df <- test_by_fd[[input$selected_fd]]
+    
+    validate(
+      need(
+        !is.null(df) && nrow(df) > 0,
+        "No 2025 test data for this department."
       )
     )
+    
+    df %>% arrange(date)
+  })
+  
+  # Selected department metrics (shared by table and interpretation)
+  selected_metrics <- reactive({
+    
+    df <- selected_test() %>%
+      filter(
+        reporting_status == "Valid",
+        !is.na(predicted),
+        !is.na(observed)
+      )
+    
+    validate(
+      need(
+        nrow(df) > 0,
+        "No valid 2025 reporting days for this department."
+      )
+    )
+    
+    list(
+      df = df,
+      m = calc_metrics(df$predicted, df$observed)
+    )
+  })
+  
+  # Selected department metrics table (raw numbers only)
+  output$validation_fd_table <- renderTable({
+    
+    format_metrics_long(selected_metrics()$m)
+    
+  })
+  
+  # Interpretation below the graph (raw numbers only)
+  output$validation_interpretation <- renderUI({
+    
+    df <- selected_metrics()$df
+    m <- selected_metrics()$m
+    
+    # Raw quantities used in the interpretations
+    avg_obs <- mean(df$observed)
+    err <- df$predicted - df$observed
+    total_days <- nrow(selected_test())
+    excluded_days <- total_days - m$days
+    total_abs_err <- sum(abs(err))
+    total_obs <- sum(df$observed)
+    
+    # Bold a calculated metric value
+    b <- function(x) paste0("<strong>", x, "</strong>")
+    
+    days_text <- paste0(
+      b(m$days), " of the ", total_days, " days in the 2025 test ",
+      "data had valid reporting and were used to calculate these ",
+      "metrics. ", excluded_days, " days were excluded as suspected ",
+      "missing reporting."
+    )
+    
+    mae_text <- paste0(
+      "On an average day, the forecast differed from the observed ",
+      "call count by ", b(sprintf("%.2f", m$mae)), " calls."
+    )
+    
+    rmse_text <- paste0(
+      "The typical daily forecast error was ",
+      b(sprintf("%.2f", m$rmse)), " calls when larger misses are ",
+      "given extra weight."
+    )
+    
+    bias_text <- paste0(
+      "On average, the forecast predicted ",
+      b(sprintf("%.2f", abs(m$bias))), " calls per day ",
+      if (m$bias >= 0) "more" else "fewer",
+      " than were observed."
+    )
+    
+    wape_text <- if (is.na(m$wape)) {
+      "Not available because no calls were observed."
+    } else {
+      paste0(
+        "Across 2025, the daily misses added up to ",
+        format(round(total_abs_err), big.mark = ","), " calls, ",
+        "equal to ", b(sprintf("%.2f%%", m$wape)), " of the ",
+        format(round(total_obs), big.mark = ","),
+        " total observed calls.",
+        if (avg_obs < 2) {
+          paste0(
+            " Because this department averaged ",
+            sprintf("%.2f", avg_obs), " calls per day, misses of ",
+            "less than one call produce a large percentage."
+          )
+        } else {
+          ""
+        }
+      )
+    }
+    
+    tagList(
+      p(tags$strong("Days Evaluated: "), HTML(days_text)),
+      p(tags$strong("Mean Absolute Error (MAE): "), HTML(mae_text)),
+      p(tags$strong("Root Mean Squared Error (RMSE): "), HTML(rmse_text)),
+      p(tags$strong("Bias: "), HTML(bias_text)),
+      p(
+        tags$strong("Weighted Absolute Percentage Error (WAPE): "),
+        HTML(wape_text)
+      )
+    )
+    
+  })
+  
+  # Predicted vs. observed chart for selected department
+  output$validation_plot <- renderPlotly({
+    
+    # Keep all dates so suspected missing periods show as gaps
+    df <- selected_test() %>%
+      mutate(
+        observed = if_else(
+          reporting_status == "Valid",
+          observed,
+          NA_real_
+        ),
+        predicted = if_else(
+          reporting_status == "Valid",
+          predicted,
+          NA_real_
+        )
+      )
+    
+    plot_ly(df, x = ~date) %>%
+      add_lines(
+        y = ~observed,
+        name = "Observed",
+        line = list(color = "#1B2A41", width = 1.5),
+        connectgaps = FALSE,
+        hovertemplate = paste0(
+          "%{x|%m/%d/%Y}<br>",
+          "Observed: %{y:.2f}<extra></extra>"
+        )
+      ) %>%
+      add_lines(
+        y = ~predicted,
+        name = "Predicted",
+        line = list(color = "#A8483F", width = 1.5),
+        connectgaps = FALSE,
+        hovertemplate = paste0(
+          "%{x|%m/%d/%Y}<br>",
+          "Predicted: %{y:.2f}<extra></extra>"
+        )
+      ) %>%
+      layout(
+        title = list(
+          text = "Predicted vs. Observed Daily Calls (2025)"
+        ),
+        xaxis = list(title = "Date"),
+        yaxis = list(title = "Number of Calls", rangemode = "tozero"),
+        legend = list(orientation = "h", x = 0, y = -0.2)
+      ) %>%
+      style_plotly()
     
   })
   
