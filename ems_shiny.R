@@ -8,6 +8,7 @@
 #                    "ggplot2", "plotly", "leaflet",
 #                    "readr", "lubridate"))
 
+# make text changes
 
 library(shiny)
 library(bslib)
@@ -55,19 +56,31 @@ if ("model_calls" %in% names(model_daily)) {
   stop("Could not find model_calls or calls_model.")
 }
 
-# ============================================================
-# LOAD EXISTING NEGATIVE BINOMIAL MODEL
-# ============================================================
+# Load saved predictions once when the app starts
+predictions_2024 <- read_csv(
+  "predictions_2024.csv",
+  col_types = cols(
+    fdid = col_character(),
+    date = col_date(),
+    forecast_origin = col_date(),
+    forecast_start = col_date(),
+    .default = col_guess()
+  )
+) %>%
+  mutate(fdid = format_fdid(fdid))
 
-nb_temporal <- readRDS("nb_temporal.rds")
+# Split predictions by department for quick lookup
+predictions_by_fd <- split(
+  predictions_2024,
+  predictions_2024$fdid
+)
 
-# Original FDID levels used during model training
-model_fd_levels <- levels(nb_temporal$frame$FDID)
+# Prepare forecast week choices
+forecast_weeks <- sort(unique(predictions_2024$forecast_start))
 
-# Match formatted dashboard FDIDs to original model IDs
-model_fd_lookup <- setNames(
-  model_fd_levels,
-  format_fdid(model_fd_levels)
+forecast_week_ends <- pmin(
+  forecast_weeks + 6,
+  as.Date("2024-12-31")
 )
 
 # ============================================================
@@ -186,6 +199,16 @@ ui <- page_fluid(
         font-weight: bold;
       }
 
+      /* Make the three summary boxes the same height */
+      .summary-row > [class*='col'] {
+        display: flex;
+      }
+
+      .summary-row .dashboard-card {
+        flex: 1;
+        width: 100%;
+      }
+
     "))
   ),
   
@@ -222,23 +245,22 @@ ui <- page_fluid(
       
       hr(),
       
-      h4("Historical Data Settings"),
-      
-      selectInput(
-        inputId = "history_range",
-        label = "Date Range",
-        choices = c(
-          "Last 30 Days" = 30,
-          "Last 90 Days" = 90,
-          "Last 365 Days" = 365,
-          "All Available Data" = "all"
-        ),
-        selected = 365
-      ),
-      
-      hr(),
       
       h4("Forecast Period"),
+      
+      selectInput(
+        inputId = "forecast_start",
+        label = "2024 Forecast Week",
+        choices = setNames(
+          as.character(forecast_weeks),
+          paste(
+            format(forecast_weeks, "%m/%d/%Y"),
+            "to",
+            format(forecast_week_ends, "%m/%d/%Y")
+          )
+        ),
+        selected = as.character(forecast_weeks[1])
+      ),
       
       textOutput("forecast_period"),
       
@@ -247,6 +269,10 @@ ui <- page_fluid(
       h4("About the Project"),
       
       p("Model: Negative Binomial Regression"),
+      
+      p("Training Period: 2020–2023"),
+      
+      p("Validation Period: 2024"),
       
       p("Forecast Horizon: 7 Days"),
       
@@ -265,6 +291,7 @@ ui <- page_fluid(
       
       # SUMMARY METRICS
       fluidRow(
+        class = "summary-row",
         
         column(
           width = 4,
@@ -343,6 +370,19 @@ ui <- page_fluid(
             
             h4("Historical Daily Call Volume"),
             
+            sliderInput(
+              inputId = "history_year_range",
+              label = "Select Year Range",
+              min = min(year(model_daily$date), na.rm = TRUE),
+              max = max(year(model_daily$date), na.rm = TRUE),
+              value = c(
+                min(year(model_daily$date), na.rm = TRUE),
+                max(year(model_daily$date), na.rm = TRUE)
+              ),
+              step = 1,
+              sep = ""
+            ),
+            
             plotlyOutput(
               "historical_plot",
               height = 400
@@ -417,32 +457,20 @@ ui <- page_fluid(
 # 5. SERVER
 # ============================================================
 
-# Only include departments with valid coordinates
-map_data <- fd_lookup %>%
-  filter(
-    !is.na(latitude),
-    !is.na(longitude),
-    latitude >= 36,
-    latitude <= 40,
-    longitude >= -84,
-    longitude <= -75
-  )
-
 server <- function(input, output, session) {
   
   # ----------------------------------------------------------
   # SELECTED DEPARTMENT
   # ----------------------------------------------------------
   
-  model_daily <- model_daily %>%
-    arrange(fdid, date)
-  
-  data_by_fd <- split(model_daily, model_daily$fdid)
-  
   selected_data <- reactive({
+    
     req(input$selected_fd)
     
-    data_by_fd[[input$selected_fd]]
+    model_daily %>%
+      filter(fdid == input$selected_fd) %>%
+      arrange(date)
+    
   })
   
   selected_info <- reactive({
@@ -457,101 +485,95 @@ server <- function(input, output, session) {
   # ----------------------------------------------------------
   
   output$forecast_period <- renderText({
+    df <- forecast_data()
     
-    forecast <- forecast_data()
-    
-    if (is.null(forecast) || nrow(forecast) == 0) {
-      return("Forecast not yet available")
-    }
+    req(nrow(df) > 0)
     
     paste(
-      format(min(forecast$date), "%B %d, %Y"),
+      format(min(df$date), "%m/%d/%Y"),
       "to",
-      format(max(forecast$date), "%B %d, %Y")
+      format(max(df$date), "%m/%d/%Y")
     )
+  })
+  
+  # ----------------------------------------------------------
+  # FORECAST PLOT
+  # ----------------------------------------------------------
+  
+  output$forecast_plot <- renderPlotly({
+    
+    df <- forecast_data()
+    
+    validate(
+      need(nrow(df) > 0, "No forecast data available.")
+    )
+    
+    p <- ggplot(
+      df,
+      aes(x = date, y = predicted)
+    ) +
+      
+      geom_ribbon(
+        aes(ymin = lower, ymax = upper),
+        fill = "#8CBFD3",
+        alpha = 0.35
+      ) +
+      
+      geom_line(
+        color = "#245B77",
+        linewidth = 1
+      ) +
+      
+      geom_point(
+        color = "#245B77",
+        size = 3
+      ) +
+      
+      scale_x_date(
+        date_breaks = "1 day",
+        date_labels = "%m/%d/%Y"
+      ) +
+      
+      labs(
+        title = "7-Day Call Volume Forecast",
+        x = "Date",
+        y = "Expected Calls"
+      ) +
+      
+      expand_limits(y = 0) +
+      
+      theme_minimal(base_size = 13) +
+      
+      theme(
+        plot.title = element_text(
+          hjust = 0.5,
+          face = "bold"
+        )
+      )
+    
+    ggplotly(p)
     
   })
   
   # ----------------------------------------------------------
-# FORECAST PLOT
-# ----------------------------------------------------------
-
-output$forecast_plot <- renderPlotly({
-
-  df <- forecast_data()
-
-  validate(
-    need(nrow(df) > 0, "No forecast data available.")
-  )
-
-  p <- ggplot(
-    df,
-    aes(x = date, y = predicted)
-  ) +
-
-    geom_ribbon(
-      aes(ymin = lower, ymax = upper),
-      fill = "#8CBFD3",
-      alpha = 0.35
-    ) +
-
-    geom_line(
-      color = "#245B77",
-      linewidth = 1
-    ) +
-
-    geom_point(
-      color = "#245B77",
-      size = 3
-    ) +
-
-    scale_x_date(
-      date_breaks = "1 day",
-      date_labels = "%b %d"
-    ) +
-
-    labs(
-      title = "7-Day Call Volume Forecast",
-      x = "Date",
-      y = "Expected Calls"
-    ) +
-
-    expand_limits(y = 0) +
-
-    theme_minimal(base_size = 13) +
-
-    theme(
-      plot.title = element_text(
-        hjust = 0.5,
-        face = "bold"
+  # FORECAST TABLE
+  # ----------------------------------------------------------
+  
+  output$forecast_table <- renderTable({
+    df <- forecast_data()
+    
+    validate(
+      need(nrow(df) > 0, "No forecast data available.")
+    )
+    
+    df %>%
+      transmute(
+        Date = format(date, "%m/%d/%Y"),
+        `Expected Calls` = round(predicted, 2),
+        `95% Lower Bound` = lower,
+        `95% Upper Bound` = upper
       )
-    )
-
-  ggplotly(p)
-
-})
-
-# ----------------------------------------------------------
-# FORECAST TABLE
-# ----------------------------------------------------------
-
-output$forecast_table <- renderTable({
-
-  df <- forecast_data()
-
-  validate(
-    need(nrow(df) > 0, "No forecast data available.")
-  )
-
-  df %>%
-    transmute(
-      Date = date,
-      `Expected Calls` = round(predicted, 2),
-      `95% Lower Bound` = lower,
-      `95% Upper Bound` = upper
-    )
-
-})
+  })
   
   
   # ----------------------------------------------------------
@@ -595,6 +617,32 @@ output$forecast_table <- renderTable({
   
   output$virginia_map <- renderLeaflet({
     
+    # Prepare map data and scale markers by average daily calls
+    map_data <- fd_lookup %>%
+      filter(
+        !is.na(latitude),
+        !is.na(longitude),
+        latitude >= 36,
+        latitude <= 40,
+        longitude >= -84,
+        longitude <= -75
+      ) %>%
+      mutate(
+        map_volume = pmax(coalesce(mean_calls, 0), 0),
+        marker_radius = 4 + 10 * sqrt(
+          map_volume / max(1, map_volume)
+        ),
+        map_label = paste0(
+          search_label,
+          " | Average daily calls: ",
+          if_else(
+            is.na(mean_calls),
+            "N/A",
+            sprintf("%.2f", mean_calls)
+          )
+        )
+      )
+    
     # Create Virginia map using OpenStreetMap
     map <- leaflet() %>%
       addTiles(
@@ -619,7 +667,7 @@ output$forecast_table <- renderTable({
           layerId = ~fdid,
           label = ~search_label,
           popup = ~search_label,
-          radius = 6,
+          radius = ~marker_radius,
           color = "#245B77",
           fillColor = "#245B77",
           fillOpacity = 0.8,
@@ -681,205 +729,80 @@ output$forecast_table <- renderTable({
   # ----------------------------------------------------------
   
   output$historical_plot <- renderPlotly({
+    req(input$history_year_range)
     
-    df <- selected_data()
+    # Filter historical data by the selected year range
+    df <- selected_data() %>%
+      filter(
+        year(date) >= input$history_year_range[1],
+        year(date) <= input$history_year_range[2]
+      )
     
-    if (input$history_range != "all") {
-      
-      days <- as.numeric(input$history_range)
-      
-      df <- df %>%
-        filter(
-          date >= max(date, na.rm = TRUE) - days
-        )
-    }
+    validate(
+      need(
+        nrow(df) > 0,
+        "No historical data in the selected year range."
+      )
+    )
     
-    plot_ly(
-      data = df,
-      x = ~date,
-      y = ~calls_display,
-      type = "scatter",
-      mode = "lines",
-      connectgaps = FALSE,
-      line = list(
+    p <- ggplot(
+      df,
+      aes(x = date, y = calls_display)
+    ) +
+      geom_line(
         color = "#245B77",
-        width = 2
-      )
-    ) %>%
-      layout(
+        linewidth = 0.8,
+        na.rm = FALSE
+      ) +
+      labs(
         title = "Historical Daily Call Volume",
-        xaxis = list(title = "Date"),
-        yaxis = list(title = "Number of Calls")
+        x = "Date",
+        y = "Number of Calls"
+      ) +
+      theme_minimal(base_size = 13) +
+      theme(
+        plot.title = element_text(
+          hjust = 0.5,
+          face = "bold"
+        )
       )
     
+    ggplotly(p)
   })
   
   
   
   # ----------------------------------------------------------
-  # GENERATE 7-DAY FORECAST USING EXISTING MODEL
+  # LOAD SAVED 2024 FORECASTS
+  # ----------------------------------------------------------
+  # ----------------------------------------------------------
+  # LOAD SAVED 2024 FORECASTS
   # ----------------------------------------------------------
   
   forecast_data <- reactive({
+    req(input$selected_fd, input$forecast_start)
     
-    req(input$selected_fd)
-    
-    fd <- input$selected_fd
-    
-    # Convert dashboard FDID to the model's original FDID
-    model_fd <- unname(model_fd_lookup[fd])
-    
-    # Confirm the selected department is in the model
-    validate(
-      need(
-        length(model_fd) == 1 && !is.na(model_fd),
-        "This department was not included in model training."
-      )
-    )
-    
-    # Get historical data for selected department
-    fd_data <- selected_data() %>%
-      transmute(
-        FDID = fdid,
-        Date = date,
-        Model_Calls = as.numeric(calls_display)
-      ) %>%
-      arrange(Date)
-    
-    # Only use valid observed call counts
-    observed_data <- fd_data %>%
-      filter(!is.na(Model_Calls))
+    df <- predictions_by_fd[[input$selected_fd]]
     
     validate(
       need(
-        nrow(observed_data) > 0,
-        "No valid historical observations available."
+        !is.null(df) && nrow(df) > 0,
+        "No saved predictions for this department."
       )
     )
     
-    # Last date with valid historical observations
-    last_date <- max(observed_data$Date)
-    
-    # Generate next seven dates
-    future_dates <- seq(
-      from = last_date + 1,
-      by = "day",
-      length.out = 7
-    )
-    
-    # Calculate department's training-period average
-    avg_calls <- fd_data %>%
+    df <- df %>%
       filter(
-        Date >= as.Date("2020-01-01"),
-        Date <= as.Date("2023-12-31"),
-        !is.na(Model_Calls)
+        forecast_start == as.Date(input$forecast_start)
       ) %>%
-      summarise(
-        avg = mean(Model_Calls)
-      ) %>%
-      pull(avg)
+      arrange(date)
     
     validate(
-      need(
-        length(avg_calls) == 1 && is.finite(avg_calls),
-        "Training-period average unavailable."
-      )
+      need(nrow(df) > 0, "No predictions for the selected week.")
     )
     
-    # Construct seven-day lag values
-    lag_values <- fd_data %>%
-      select(Date, Model_Calls) %>%
-      mutate(Date = Date + 7)
-    
-    # Create future predictor data
-    future <- data.frame(
-      FDID = factor(
-        fd,
-        levels = model_fd_levels
-      ),
-      Date = future_dates
-    ) %>%
-      left_join(
-        lag_values,
-        by = "Date"
-      ) %>%
-      mutate(
-        Day_of_Week = factor(
-          wday(Date, week_start = 1),
-          levels = 1:7
-        ),
-        
-        Month = factor(
-          month(Date),
-          levels = 1:12
-        ),
-        
-        Year_centered = year(Date) - 2023,
-        
-        avg_daily_calls = avg_calls,
-        
-        lag7_missing = as.integer(
-          is.na(Model_Calls)
-        ),
-        
-        log_lag7 = log1p(
-          coalesce(
-            Model_Calls,
-            avg_daily_calls
-          )
-        )
-      )
-    
-    # Generate predictions using existing NB model
-    future$predicted <- as.numeric(
-      predict(
-        nb_temporal,
-        newdata = future,
-        type = "response",
-        re.form = NULL,
-        allow.new.levels = FALSE
-      )
-    )
-    
-    # Retrieve negative binomial dispersion
-    future$dispersion <- as.numeric(
-      predict(
-        nb_temporal,
-        newdata = future,
-        type = "disp",
-        re.form = NULL,
-        allow.new.levels = FALSE
-      )
-    )
-    
-    # Approximate 95% prediction intervals
-    future <- future %>%
-      mutate(
-        lower = qnbinom(
-          0.025,
-          mu = predicted,
-          size = dispersion
-        ),
-        
-        upper = qnbinom(
-          0.975,
-          mu = predicted,
-          size = dispersion
-        )
-      )
-    
-    # Return columns compatible with your existing dashboard
-    future %>%
-      transmute(
-        fdid = as.character(FDID),
-        date = Date,
-        predicted = predicted,
-        lower = lower,
-        upper = upper
-      )
-    
-  }) %>%
-    bindCache(input$selected_fd)
+    df
+  })
   
   # ----------------------------------------------------------
   # MODEL VALIDATION PLACEHOLDER
