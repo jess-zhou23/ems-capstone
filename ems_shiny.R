@@ -364,15 +364,22 @@ ui <- page_fluid(
         letter-spacing: -0.02em;
       }
 
-      /* Selected department name in the first summary box */
+      /* Selected department name in the first summary box.
+         Long names wrap to at most two lines, then end in an ellipsis */
       #department_name {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
         color: #1B2A41;
-        line-height: 1.35;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
       }
 
-      /* Make the three summary boxes the same height */
+      /* Three uniform summary boxes: equal width (column width = 4),
+         fixed equal height, content vertically centered */
       .summary-row > [class*='col'] {
         display: flex;
       }
@@ -380,7 +387,17 @@ ui <- page_fluid(
       .summary-row .dashboard-card {
         flex: 1;
         width: 100%;
+        height: 128px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 18px 22px;
+        overflow: hidden;
         border-top: 3px solid #1B2A41;
+      }
+
+      .summary-row .dashboard-card h5 {
+        margin-bottom: 8px;
       }
 
       /* ---------- Sidebar ---------- */
@@ -538,6 +555,41 @@ ui <- page_fluid(
       /* ---------- Map ---------- */
       .leaflet-container {
         border-radius: 8px;
+      }
+
+      /* Reset Map View button (top-right of map) */
+      .leaflet-bar.easy-button-container {
+        margin-right: 16px !important;
+        border: 1px solid #D5DBE2;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(27, 42, 65, 0.10);
+        overflow: hidden;
+      }
+
+      .leaflet-bar button.easy-button-button {
+        width: auto !important;
+        min-width: 120px;
+        height: 30px !important;
+        padding: 0 12px;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background-color: #FFFFFF;
+        color: #1B2A41;
+        font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .leaflet-bar button.easy-button-button:hover {
+        background-color: #F6E9E7;
+        color: #A8483F;
+      }
+
+      .leaflet-bar button.easy-button-button .button-state {
+        line-height: 30px !important;
       }
 
       /* ---------- Disclaimer ---------- */
@@ -1094,7 +1146,14 @@ server <- function(input, output, session) {
     )
     
     # Create Virginia map using OpenStreetMap
-    map <- leaflet() %>%
+    # Zoom limits: 6 (all of Virginia) to 15 (street level)
+    map <- leaflet(
+      options = leafletOptions(
+        minZoom = 6,
+        maxZoom = 15,
+        maxBoundsViscosity = 1
+      )
+    ) %>%
       addTiles(
         urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         attribution = '&copy; OpenStreetMap contributors'
@@ -1104,6 +1163,29 @@ server <- function(input, output, session) {
         lat1 = 36.4,
         lng2 = -75.1,
         lat2 = 39.6
+      ) %>%
+      # Keep panning within a box around Virginia
+      setMaxBounds(
+        lng1 = -86.5,
+        lat1 = 35.0,
+        lng2 = -72.5,
+        lat2 = 41.0
+      ) %>%
+      # Reset button returns to the original statewide view.
+      # Runs in the browser, so it never changes the selected
+      # department and works after any zoom, pan, or selection.
+      addEasyButton(
+        easyButton(
+          icon = "<span>Reset Map View</span>",
+          title = "Reset Map View",
+          position = "topright",
+          id = "reset-map-view",
+          onClick = htmlwidgets::JS(
+            "function(btn, map) {
+               map.fitBounds([[36.4, -83.8], [39.6, -75.1]]);
+             }"
+          )
+        )
       )
     
     # Add markers for fire departments
