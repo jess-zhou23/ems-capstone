@@ -784,6 +784,18 @@ server <- function(input, output, session) {
       need(nrow(df) > 0, "No forecast data available.")
     )
     
+    # Display only: clamp lower bound at 0 (+ 0 turns -0 into 0)
+    df <- df %>%
+      mutate(
+        lower = pmax(lower, 0) + 0,
+        hover_text = paste0(
+          "Date: ", format(date, "%m/%d/%Y"),
+          "<br>Predicted Calls: ", sprintf("%.2f", predicted),
+          "<br>95% Lower Bound: ", sprintf("%.2f", lower),
+          "<br>95% Upper Bound: ", sprintf("%.2f", upper)
+        )
+      )
+    
     p <- ggplot(
       df,
       aes(x = date, y = predicted)
@@ -801,6 +813,7 @@ server <- function(input, output, session) {
       ) +
       
       geom_point(
+        aes(text = hover_text),
         color = "#A8483F",
         size = 3
       ) +
@@ -826,7 +839,7 @@ server <- function(input, output, session) {
         panel.grid.major = element_line(color = "#EEF1F4")
       )
     
-    style_plotly(ggplotly(p))
+    style_plotly(ggplotly(p, tooltip = "text"))
     
   })
   
@@ -845,10 +858,10 @@ server <- function(input, output, session) {
       transmute(
         Date = format(date, "%m/%d/%Y"),
         `Expected Calls` = round(predicted, 2),
-        `95% Lower Bound` = lower,
-        `95% Upper Bound` = upper
+        `95% Lower Bound` = round(pmax(lower, 0), 2) + 0,
+        `95% Upper Bound` = round(upper, 2)
       )
-  })
+  }, digits = 2)
   
   
   # ----------------------------------------------------------
