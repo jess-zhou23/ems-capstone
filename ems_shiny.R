@@ -258,6 +258,46 @@ style_plotly <- function(p) {
 }
 
 # ============================================================
+# TEAM HEADSHOTS
+# ============================================================
+
+# To add headshots, create a folder "www/headshots" next to this
+# file and save each photo with the file name below. Photos appear
+# automatically; until then, a placeholder with initials is shown.
+team_members <- data.frame(
+  name = c("Jake Luo", "Kenzie Alber-Ho", "Jess Zhou", "Claire Arnett"),
+  initials = c("JL", "KA", "JZ", "CA"),
+  photo = c(
+    "jake_luo.jpg",
+    "kenzie_alber_ho.jpg",
+    "jess_zhou.jpg",
+    "claire_arnett.jpg"
+  )
+)
+
+headshot_dir <- file.path("www", "headshots")
+
+if (dir.exists(headshot_dir)) {
+  addResourcePath("headshots", headshot_dir)
+}
+
+team_card <- function(name, initials, photo) {
+  div(
+    class = "team-member",
+    if (file.exists(file.path(headshot_dir, photo))) {
+      tags$img(
+        src = paste0("headshots/", photo),
+        alt = name,
+        class = "team-photo"
+      )
+    } else {
+      div(class = "team-photo team-placeholder", initials)
+    },
+    div(class = "team-name", name)
+  )
+}
+
+# ============================================================
 # 4. USER INTERFACE
 # ============================================================
 
@@ -602,6 +642,286 @@ ui <- page_fluid(
         border-radius: 6px;
       }
 
+      /* ---------- About the Project navigation ---------- */
+      .about-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .about-nav-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
+        background-color: #FFFFFF;
+        border: 1px solid #E3E7EC;
+        border-radius: 8px;
+        color: #33475F;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 9px 12px;
+        box-shadow: none;
+      }
+
+      .about-nav-btn .fa,
+      .about-nav-btn svg {
+        width: 16px;
+        color: #5B6675;
+        fill: #5B6675;
+      }
+
+      .about-nav-btn:hover {
+        background-color: #F5F6F8;
+        border-color: #D5DBE2;
+        color: #1B2A41;
+      }
+
+      .about-nav-btn.active,
+      .about-nav-btn.active:hover {
+        background-color: #1B2A41;
+        border-color: #1B2A41;
+        color: #FFFFFF;
+      }
+
+      .about-nav-btn.active .fa,
+      .about-nav-btn.active svg {
+        color: #FFFFFF;
+        fill: #FFFFFF;
+      }
+
+      .about-nav-btn:focus {
+        box-shadow: 0 0 0 3px rgba(27, 42, 65, 0.15);
+      }
+
+      .back-btn {
+        background-color: #FFFFFF;
+        border: 1px solid #D5DBE2;
+        color: #1B2A41;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 6px 12px;
+        margin-bottom: 14px;
+      }
+
+      .back-btn:hover {
+        background-color: #F6E9E7;
+        border-color: #A8483F;
+        color: #A8483F;
+      }
+
+      /* ---------- Information pages ---------- */
+      .info-page {
+        padding: 28px 32px;
+      }
+
+      .info-page-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 14px;
+        margin-bottom: 22px;
+        border-bottom: 1px solid #E3E7EC;
+      }
+
+      .info-page-title .fa,
+      .info-page-title svg {
+        color: #A8483F;
+        fill: #A8483F;
+      }
+
+      .info-section {
+        max-width: 860px;
+        margin-bottom: 24px;
+      }
+
+      .info-heading {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1B2A41;
+        margin-bottom: 8px;
+      }
+
+      .info-section p {
+        color: #33475F;
+        line-height: 1.7;
+        margin-bottom: 0;
+      }
+
+      .limitations-box {
+        display: flex;
+        gap: 14px;
+        max-width: 860px;
+        background-color: #F2F5F8;
+        border: 1px solid #E3E7EC;
+        border-left: 4px solid #1B2A41;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+      }
+
+      .limitations-box .fa,
+      .limitations-box svg {
+        color: #1B2A41;
+        fill: #1B2A41;
+        margin-top: 3px;
+      }
+
+      .limitations-box p {
+        color: #33475F;
+        line-height: 1.7;
+        margin-bottom: 0;
+      }
+
+      .model-table {
+        max-width: 560px;
+      }
+
+      .model-table td:first-child {
+        font-weight: 600;
+        color: #1B2A41;
+        width: 42%;
+      }
+
+      /* ---------- Team ---------- */
+      .team-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        max-width: 860px;
+        margin: 8px 0 8px 0;
+      }
+
+      .team-member {
+        text-align: center;
+      }
+
+      .team-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 12px auto;
+        display: block;
+        border: 3px solid #FFFFFF;
+        box-shadow: 0 0 0 1px #E3E7EC;
+      }
+
+      .team-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #E8EDF2;
+        color: #1B2A41;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      .team-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1B2A41;
+      }
+
+      .team-footer {
+        max-width: 860px;
+        text-align: center;
+        font-size: 13px;
+        color: #5B6675;
+        border-top: 1px solid #E3E7EC;
+        padding-top: 16px;
+        margin-top: 28px;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 900px) {
+        .team-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 520px) {
+        .team-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ---------- How to Use This Dashboard ---------- */
+      details.how-to {
+        background: #FFFFFF;
+        border: 1px solid #E3E7EC;
+        border-radius: 10px;
+        padding: 14px 22px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 2px rgba(27, 42, 65, 0.05);
+      }
+
+      details.how-to summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        list-style: none;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1B2A41;
+      }
+
+      details.how-to summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details.how-to summary .how-to-icon {
+        color: #A8483F;
+      }
+
+      details.how-to summary .how-to-chevron {
+        margin-left: auto;
+        color: #5B6675;
+        transition: transform 0.2s ease;
+      }
+
+      details.how-to[open] summary .how-to-chevron {
+        transform: rotate(180deg);
+      }
+
+      .how-to-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 32px;
+        margin-top: 14px;
+      }
+
+      .how-to-item strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1B2A41;
+        margin-bottom: 2px;
+      }
+
+      .how-to-item p {
+        font-size: 13px;
+        line-height: 1.55;
+        margin: 0;
+      }
+
+      @media (max-width: 768px) {
+        .how-to-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+    ")),
+    
+    # Highlight the active About the Project tab
+    tags$script(HTML("
+      Shiny.addCustomMessageHandler('setActiveNav', function(view) {
+        document.querySelectorAll('.about-nav-btn').forEach(function(btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-view') === view);
+        });
+      });
     "))
   ),
   
@@ -661,24 +981,124 @@ ui <- page_fluid(
       
       h4("About the Project"),
       
-      p("Model: Negative Binomial Regression"),
-      
-      p("Training Period: 2020–2023"),
-      
-      p("Validation Period: 2024"),
-      
-      p("Forecast Horizon: 7 Days"),
-      
-      p("Geographic Scope: Virginia"),
-      
-      p("Data Source: NFIRS"),
-      
-      p("Historical Period: 2020–2025")
+      div(
+        class = "about-nav",
+        
+        actionButton(
+          inputId = "nav_overview",
+          label = "Project Overview",
+          icon = icon("circle-info"),
+          class = "about-nav-btn",
+          `data-view` = "overview"
+        ),
+        
+        actionButton(
+          inputId = "nav_methods",
+          label = "Data & Methodology",
+          icon = icon("database"),
+          class = "about-nav-btn",
+          `data-view` = "methods"
+        ),
+        
+        actionButton(
+          inputId = "nav_team",
+          label = "Our Team",
+          icon = icon("users"),
+          class = "about-nav-btn",
+          `data-view` = "team"
+        )
+      )
     ),
     
     # ========================================================
-    # MAIN DASHBOARD
+    # MAIN CONTENT
     # ========================================================
+    
+    div(
+      
+      # Back button (only shown on About the Project pages)
+      conditionalPanel(
+        condition = "input.main_view && input.main_view !== 'dashboard'",
+        actionButton(
+          inputId = "nav_dashboard",
+          label = "Back to Forecast Dashboard",
+          icon = icon("arrow-left"),
+          class = "back-btn"
+        )
+      ),
+      
+      navset_hidden(
+        id = "main_view",
+        
+        # ------------------------------------------------------
+        # FORECAST DASHBOARD
+        # ------------------------------------------------------
+        
+        nav_panel_hidden(
+          value = "dashboard",
+          
+          # HOW TO USE THIS DASHBOARD (collapsible)
+          tags$details(
+            class = "how-to",
+            open = NA,
+            
+            tags$summary(
+              icon("circle-info", class = "how-to-icon"),
+              span("How to Use This Dashboard"),
+              icon("chevron-down", class = "how-to-chevron")
+            ),
+            
+            div(
+              class = "how-to-grid",
+              
+              div(
+                class = "how-to-item",
+                tags$strong("Selecting a Department"),
+                p(
+                  "Use the search bar to find a Virginia fire department
+                   by its name or FDID, or click a department marker
+                   directly on the interactive map."
+                )
+              ),
+              
+              div(
+                class = "how-to-item",
+                tags$strong("Navigating the Map"),
+                p(
+                  "Explore the geographic distribution of departments
+                   using the map's zoom and pan controls. Marker size and
+                   color indicate average daily call volume, with larger
+                   markers representing departments with higher reported
+                   call volumes. Use the map legend to interpret these
+                   differences, and the reset button to return to the
+                   statewide view."
+                )
+              ),
+              
+              div(
+                class = "how-to-item",
+                tags$strong("Choosing a Forecast Period"),
+                p(
+                  "Select a forecast week to view the predicted daily call
+                   volume for the chosen department over a seven-day
+                   period."
+                )
+              ),
+              
+              div(
+                class = "how-to-item",
+                tags$strong("Interpreting the Results"),
+                p(
+                  "Use the historical trends and seven-day forecast
+                   visualizations to compare past call activity with
+                   predicted demand. The forecast includes upper and lower
+                   prediction bounds to illustrate uncertainty, and the
+                   forecast table provides the corresponding numerical
+                   values."
+                )
+              )
+            )
+          ),
     
     div(
       
@@ -861,6 +1281,263 @@ ui <- page_fluid(
          determine operational staffing decisions."
       )
     )
+        ),
+        
+        # ------------------------------------------------------
+        # PROJECT OVERVIEW
+        # ------------------------------------------------------
+        
+        nav_panel_hidden(
+          value = "overview",
+          
+          div(
+            class = "dashboard-card info-page",
+            
+            h4(
+              class = "info-page-title",
+              icon("circle-info"),
+              "Project Overview"
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "Project Background"),
+              p(
+                "This dashboard uses historical fire and emergency
+                 medical services (EMS) incident data to forecast daily
+                 call volume for fire departments across Virginia. The
+                 goal of the dashboard is to help departments better
+                 anticipate call demand and support decisions related to
+                 staffing, resource allocation, and overall operational
+                 planning."
+              )
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "Project Objectives"),
+              p(
+                "Through this project, we aim to make historical fire and
+                 EMS incident data more accessible and useful for Virginia
+                 fire departments. By analyzing historical call volume
+                 patterns and developing statistical forecasts, the
+                 dashboard allows departments to better understand past
+                 demand and anticipate future call activity. These
+                 insights are intended to provide additional information
+                 that can support decisions about staffing, resource
+                 allocation, and long-term operational planning."
+              )
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "Intended Use"),
+              p(
+                "The forecasting results are intended to support the
+                 development of a free, accessible tool for fire
+                 departments to anticipate future demand, allocate
+                 appropriate personnel and resources, and make more
+                 informed decisions about staffing and long-term
+                 department planning. These forecasts should be used
+                 alongside departmental knowledge, local conditions, and
+                 other available information rather than as the sole
+                 basis for operational decisions."
+              )
+            )
+          )
+        ),
+        
+        # ------------------------------------------------------
+        # DATA & METHODOLOGY
+        # ------------------------------------------------------
+        
+        nav_panel_hidden(
+          value = "methods",
+          
+          div(
+            class = "dashboard-card info-page",
+            
+            h4(
+              class = "info-page-title",
+              icon("database"),
+              "Data & Methodology"
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "Data Source"),
+              p(
+                "The data comes from the U.S. Fire Administration's
+                 (USFA) National Fire Incident Reporting System (NFIRS),
+                 specifically the NFIRS Basic Incident dataset. This
+                 dataset contains records of fire, emergency medical
+                 services (EMS), hazardous materials, rescues, and other
+                 service-related incidents. Our analysis focuses on
+                 available incident data reported by Virginia fire
+                 departments from 2020 to 2025."
+              )
+            ),
+            
+            div(
+              class = "limitations-box",
+              icon("circle-info"),
+              div(
+                tags$h3(
+                  class = "info-heading",
+                  "Important Data Limitations"
+                ),
+                p(
+                  "NFIRS is a voluntary reporting system, meaning U.S.
+                   fire departments are not required to submit complete
+                   incident records at the national level. As a result of
+                   this reporting structure, some departments may have
+                   missing reporting periods, incomplete records, or
+                   inconsistencies across years. Therefore, the reported
+                   call volume used in the forecasting model may not
+                   reflect the total number of incidents a department
+                   actually responded to. Forecasts should be interpreted
+                   with these limitations in mind, particularly for
+                   departments with inconsistent reporting histories."
+                )
+              )
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "Forecasting Methodology"),
+              p(
+                "The dashboard uses a negative binomial regression model
+                 to predict daily call volume across Virginia fire
+                 departments. This modeling approach accounts for
+                 variation in incident counts and is appropriate for
+                 count data that may exhibit overdispersion. The model is
+                 trained using historical incident data from 2020 to 2023
+                 and evaluated against incidents reported in 2024.
+                 Forecasts are presented in seven-day intervals, with
+                 upper and lower prediction bounds to communicate
+                 uncertainty in the estimated call volume."
+              )
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "Model Information"),
+              tags$table(
+                class = "table model-table",
+                tags$thead(
+                  tags$tr(
+                    tags$th("Category"),
+                    tags$th("Details")
+                  )
+                ),
+                tags$tbody(
+                  tags$tr(
+                    tags$td("Model"),
+                    tags$td("Negative Binomial Regression")
+                  ),
+                  tags$tr(
+                    tags$td("Training Period"),
+                    tags$td("2020–2023")
+                  ),
+                  tags$tr(
+                    tags$td("Validation Period"),
+                    tags$td("2024")
+                  ),
+                  tags$tr(
+                    tags$td("Forecast Horizon"),
+                    tags$td("7 Days")
+                  ),
+                  tags$tr(
+                    tags$td("Geographic Scope"),
+                    tags$td("Virginia")
+                  ),
+                  tags$tr(
+                    tags$td("Data Source"),
+                    tags$td("NFIRS Basic Incident Dataset")
+                  ),
+                  tags$tr(
+                    tags$td("Historical Data"),
+                    tags$td("2020–2025")
+                  )
+                )
+              )
+            )
+          )
+        ),
+        
+        # ------------------------------------------------------
+        # OUR TEAM
+        # ------------------------------------------------------
+        
+        nav_panel_hidden(
+          value = "team",
+          
+          div(
+            class = "dashboard-card info-page",
+            
+            h4(
+              class = "info-page-title",
+              icon("users"),
+              "Our Team"
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "The Staffing Strategists"),
+              p(
+                "Our team, The Staffing Strategists, consists of four
+                 University of Virginia Class of 2027 students pursuing
+                 Bachelor of Arts degrees in Applied Statistics: Jake
+                 Luo, Kenzie Alber-Ho, Jess Zhou, and Claire Arnett."
+              ),
+              br(),
+              p(
+                "As part of our STAT 4996 Capstone project, we developed
+                 this dashboard to apply the statistical modeling, data
+                 analysis, and data visualization skills we have gained
+                 throughout our undergraduate studies to a real-world
+                 challenge."
+              ),
+              br(),
+              p(
+                "Our goal is to make historical fire and EMS call volume
+                 data more accessible and actionable for Virginia fire
+                 departments. By combining statistical forecasting with
+                 interactive visualizations, we hope to help departments
+                 better understand historical trends, anticipate future
+                 demand, and make more informed staffing and resource
+                 allocation decisions."
+              )
+            ),
+            
+            div(
+              class = "info-section",
+              tags$h3(class = "info-heading", "Team Member Profiles"),
+              div(
+                class = "team-grid",
+                lapply(
+                  seq_len(nrow(team_members)),
+                  function(i) {
+                    team_card(
+                      team_members$name[i],
+                      team_members$initials[i],
+                      team_members$photo[i]
+                    )
+                  }
+                )
+              )
+            ),
+            
+            div(
+              class = "team-footer",
+              "University of Virginia | Class of 2027",
+              br(),
+              "STAT 4996 Capstone Project | B.A. in Applied Statistics"
+            )
+          )
+        )
+      )
+    )
   )
 )
 
@@ -869,6 +1546,27 @@ ui <- page_fluid(
 # ============================================================
 
 server <- function(input, output, session) {
+  
+  # ----------------------------------------------------------
+  # ABOUT THE PROJECT NAVIGATION
+  # ----------------------------------------------------------
+  
+  show_view <- function(view) {
+    nav_select("main_view", selected = view)
+    session$sendCustomMessage("setActiveNav", view)
+  }
+  
+  observeEvent(input$nav_overview, show_view("overview"))
+  observeEvent(input$nav_methods, show_view("methods"))
+  observeEvent(input$nav_team, show_view("team"))
+  observeEvent(input$nav_dashboard, show_view("dashboard"))
+  
+  # Changing the department or forecast week returns to the dashboard
+  observeEvent(
+    list(input$selected_fd, input$forecast_start),
+    show_view("dashboard"),
+    ignoreInit = TRUE
+  )
   
   # ----------------------------------------------------------
   # SELECTED DEPARTMENT
