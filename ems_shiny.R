@@ -155,6 +155,43 @@ fd_lookup <- fd_lookup %>%
   left_join(fd_summary, by = "fdid")
 
 # ============================================================
+# PLOT STYLING HELPER
+# ============================================================
+
+# Apply Inter typography to Plotly charts:
+# chart titles 16px, axis labels and ticks 12px
+style_plotly <- function(p) {
+  p %>%
+    layout(
+      font = list(
+        family = "Inter, -apple-system, Segoe UI, Roboto, sans-serif",
+        size = 12,
+        color = "#1F2A37"
+      ),
+      title = list(
+        font = list(size = 16, color = "#1B2A41")
+      ),
+      xaxis = list(
+        titlefont = list(size = 12, color = "#5B6675"),
+        tickfont = list(size = 12, color = "#5B6675")
+      ),
+      yaxis = list(
+        titlefont = list(size = 12, color = "#5B6675"),
+        tickfont = list(size = 12, color = "#5B6675")
+      ),
+      hoverlabel = list(
+        font = list(
+          family = "Inter, -apple-system, Segoe UI, Roboto, sans-serif",
+          size = 12
+        )
+      ),
+      paper_bgcolor = "rgba(0,0,0,0)",
+      plot_bgcolor = "rgba(0,0,0,0)"
+    ) %>%
+    config(displaylogo = FALSE)
+}
+
+# ============================================================
 # 4. USER INTERFACE
 # ============================================================
 
@@ -163,40 +200,110 @@ ui <- page_fluid(
   theme = bs_theme(
     version = 5,
     bootswatch = "flatly",
-    primary = "#245B77"
+    primary = "#1B2A41",
+    secondary = "#A8483F",
+    bg = "#FFFFFF",
+    fg = "#1F2A37",
+    base_font = font_google("Inter", wght = c(400, 500, 600, 700)),
+    heading_font = font_google("Inter", wght = c(400, 500, 600, 700)),
+    font_scale = 0.875
   ),
   
   tags$head(
     tags$style(HTML("
 
-      body {
-        background-color: #F4F7FA;
+      /* ---------- Palette ----------
+         Navy:      #1B2A41   Navy light: #33475F
+         Muted red: #A8483F   Red tint:   #F6E9E7
+         Page bg:   #F5F6F8   Border:     #E3E7EC
+         Text:      #1F2A37   Muted text: #5B6675
+      */
+
+      /* ---------- Base typography ---------- */
+      body,
+      button, input, select, textarea,
+      .selectize-input, .selectize-dropdown,
+      .nav-link, .table, .irs, .leaflet-container {
+        font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif !important;
       }
 
+      body {
+        background-color: #F5F6F8;
+        color: #1F2A37;
+        font-size: 14px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      p {
+        font-size: 14px;
+        font-weight: 400;
+        color: #5B6675;
+      }
+
+      /* ---------- Header ---------- */
       .dashboard-title {
-        font-size: 30px;
-        font-weight: bold;
-        color: #17354B;
-        margin-top: 20px;
+        font-size: 26px;
+        font-weight: 700;
+        color: #1B2A41;
+        letter-spacing: -0.01em;
+        margin-top: 24px;
+        padding-left: 14px;
+        border-left: 5px solid #A8483F;
+        line-height: 1.2;
       }
 
       .dashboard-subtitle {
-        color: #667788;
-        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #5B6675;
+        margin: 6px 0 22px 0;
+        padding-left: 19px;
+        letter-spacing: 0.02em;
       }
 
+      /* ---------- Section headings ---------- */
+      h4 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1B2A41;
+        letter-spacing: -0.01em;
+        margin-bottom: 10px;
+      }
+
+      h5 {
+        font-size: 13px;
+        font-weight: 600;
+        color: #5B6675;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+      }
+
+      /* ---------- Cards ---------- */
       .dashboard-card {
-        background: white;
-        border: 1px solid #DEE5EB;
-        border-radius: 12px;
-        padding: 20px;
+        background: #FFFFFF;
+        border: 1px solid #E3E7EC;
+        border-radius: 10px;
+        padding: 22px 24px;
         margin-bottom: 20px;
+        box-shadow: 0 1px 2px rgba(27, 42, 65, 0.05);
       }
 
       .metric-number {
-        color: #245B77;
-        font-size: 28px;
-        font-weight: bold;
+        color: #1B2A41;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+
+      /* Selected department name in the first summary box */
+      #department_name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1B2A41;
+        line-height: 1.35;
       }
 
       /* Make the three summary boxes the same height */
@@ -207,6 +314,174 @@ ui <- page_fluid(
       .summary-row .dashboard-card {
         flex: 1;
         width: 100%;
+        border-top: 3px solid #1B2A41;
+      }
+
+      /* ---------- Sidebar ---------- */
+      .bslib-sidebar-layout > .sidebar {
+        background-color: #FFFFFF;
+        border-right: 1px solid #E3E7EC;
+      }
+
+      .bslib-sidebar-layout > .sidebar h4 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .bslib-sidebar-layout > .sidebar p {
+        margin-bottom: 6px;
+      }
+
+      .bslib-sidebar-layout > .sidebar hr {
+        border-color: #E3E7EC;
+        opacity: 1;
+        margin: 18px 0;
+      }
+
+      #forecast_period {
+        font-size: 13px;
+        font-weight: 500;
+        color: #A8483F;
+        margin-top: -6px;
+      }
+
+      /* ---------- Inputs and filters ---------- */
+      .control-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #33475F;
+        margin-bottom: 6px;
+      }
+
+      .selectize-input,
+      .form-select,
+      .form-control {
+        font-size: 14px;
+        border: 1px solid #D5DBE2;
+        border-radius: 8px;
+        box-shadow: none;
+      }
+
+      .selectize-input.focus,
+      .form-select:focus,
+      .form-control:focus {
+        border-color: #1B2A41;
+        box-shadow: 0 0 0 3px rgba(27, 42, 65, 0.12);
+      }
+
+      .selectize-dropdown {
+        font-size: 14px;
+        border-radius: 8px;
+      }
+
+      .selectize-dropdown .active {
+        background-color: #F6E9E7;
+        color: #1B2A41;
+      }
+
+      .btn {
+        font-weight: 500;
+        border-radius: 8px;
+      }
+
+      /* Year range slider */
+      .irs--shiny .irs-bar {
+        background: #1B2A41;
+        border-color: #1B2A41;
+      }
+
+      .irs--shiny .irs-handle {
+        border-color: #1B2A41;
+      }
+
+      .irs--shiny .irs-from,
+      .irs--shiny .irs-to,
+      .irs--shiny .irs-single {
+        background-color: #1B2A41;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .irs--shiny .irs-grid-text,
+      .irs--shiny .irs-min,
+      .irs--shiny .irs-max {
+        font-size: 11px;
+        color: #5B6675;
+      }
+
+      /* ---------- Navigation tabs ---------- */
+      .nav-tabs .nav-link {
+        font-size: 14px;
+        font-weight: 500;
+        color: #5B6675;
+        border: none;
+        border-bottom: 2px solid transparent;
+        padding: 10px 16px;
+      }
+
+      .nav-tabs .nav-link:hover {
+        color: #1B2A41;
+      }
+
+      .nav-tabs .nav-link.active {
+        color: #1B2A41;
+        font-weight: 600;
+        background: transparent;
+        border-bottom: 2px solid #A8483F;
+      }
+
+      /* ---------- Tables ---------- */
+      .shiny-table,
+      .dashboard-card table {
+        font-size: 14px;
+        border: 1px solid #E3E7EC;
+        border-radius: 8px;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+        width: 100%;
+      }
+
+      .shiny-table thead th,
+      .dashboard-card table thead th {
+        background-color: #1B2A41;
+        color: #FFFFFF;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 10px 14px;
+        border: none;
+      }
+
+      .shiny-table td,
+      .dashboard-card table td {
+        padding: 9px 14px;
+        border-top: 1px solid #E3E7EC;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .shiny-table tbody tr:nth-child(even) {
+        background-color: #F8F9FB;
+      }
+
+      /* ---------- Plotly charts ---------- */
+      .js-plotly-plot .gtitle {
+        font-weight: 600 !important;
+      }
+
+      /* ---------- Map ---------- */
+      .leaflet-container {
+        border-radius: 8px;
+      }
+
+      /* ---------- Disclaimer ---------- */
+      .dashboard-disclaimer {
+        font-size: 13px;
+        color: #5B6675;
+        border-left: 3px solid #A8483F;
+        background: #FFFFFF;
+        padding: 10px 14px;
+        border-radius: 6px;
       }
 
     "))
@@ -445,6 +720,7 @@ ui <- page_fluid(
       ),
       
       p(
+        class = "dashboard-disclaimer",
         "Disclaimer: Forecasts are based on historical
          NFIRS reporting and should not independently
          determine operational staffing decisions."
@@ -515,17 +791,17 @@ server <- function(input, output, session) {
       
       geom_ribbon(
         aes(ymin = lower, ymax = upper),
-        fill = "#8CBFD3",
-        alpha = 0.35
+        fill = "#9AA8BA",
+        alpha = 0.30
       ) +
       
       geom_line(
-        color = "#245B77",
+        color = "#1B2A41",
         linewidth = 1
       ) +
       
       geom_point(
-        color = "#245B77",
+        color = "#A8483F",
         size = 3
       ) +
       
@@ -545,13 +821,12 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 13) +
       
       theme(
-        plot.title = element_text(
-          hjust = 0.5,
-          face = "bold"
-        )
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "#EEF1F4")
       )
     
-    ggplotly(p)
+    style_plotly(ggplotly(p))
     
   })
   
@@ -668,8 +943,8 @@ server <- function(input, output, session) {
           label = ~search_label,
           popup = ~search_label,
           radius = ~marker_radius,
-          color = "#245B77",
-          fillColor = "#245B77",
+          color = "#FFFFFF",
+          fillColor = "#1B2A41",
           fillOpacity = 0.8,
           stroke = TRUE,
           weight = 1
@@ -750,7 +1025,7 @@ server <- function(input, output, session) {
       aes(x = date, y = calls_display)
     ) +
       geom_line(
-        color = "#245B77",
+        color = "#1B2A41",
         linewidth = 0.8,
         na.rm = FALSE
       ) +
@@ -761,13 +1036,12 @@ server <- function(input, output, session) {
       ) +
       theme_minimal(base_size = 13) +
       theme(
-        plot.title = element_text(
-          hjust = 0.5,
-          face = "bold"
-        )
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "#EEF1F4")
       )
     
-    ggplotly(p)
+    style_plotly(ggplotly(p))
   })
   
   
